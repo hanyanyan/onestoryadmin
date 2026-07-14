@@ -4,6 +4,8 @@ import { ConfigProvider } from 'antd';
 import AppLayout from './components/AppLayout';
 import ActorList from './pages/ActorList';
 import Users from './pages/Users';
+import MiningWeeklyRewardsList from './pages/MiningWeeklyRewardsList';
+import MiningWeeklyRewardsDetail from './pages/MiningWeeklyRewardsDetail';
 
 const Home: React.FC = () => {
   return (
@@ -22,6 +24,8 @@ const App: React.FC = () => {
           <Route path="/" element={<AppLayout />}>
             <Route index element={<Home />} />
             <Route path="dramas/actor-list" element={<ActorList />} />
+            <Route path="dramas/mining-weekly-rewards" element={<MiningWeeklyRewardsList />} />
+            <Route path="dramas/mining-weekly-rewards/:periodId" element={<MiningWeeklyRewardsDetail />} />
             <Route path="users" element={<Users />} />
             <Route path="dramas/drama-list" element={<Navigate to="/dramas/actor-list" replace />} />
             <Route path="dramas/client-banner" element={<Navigate to="/dramas/actor-list" replace />} />

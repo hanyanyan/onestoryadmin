@@ -16,16 +16,42 @@ const topNavItems = [
 
 const sidebarItems = {
   dramas: [
-    { key: '/dramas/drama-list', label: 'Drama List' },
     { key: '/dramas/actor-list', label: 'Actor List' },
+    { key: '/dramas/mining-weekly-rewards', label: 'Mining Weekly Rewards' },
+    { key: '/dramas/drama-list', label: 'Drama List' },
     { key: '/dramas/client-banner', label: 'Client Banner' },
   ],
 };
 
 const breadcrumbMap: Record<string, string> = {
   '/dramas/actor-list': 'ActorList',
+  '/dramas/mining-weekly-rewards': 'Mining Weekly Rewards',
   '/dramas/drama-list': 'DramaList',
   '/dramas/client-banner': 'ClientBanner',
+};
+
+const getBreadcrumbItems = (pathname: string, navigateFn: (path: string) => void) => {
+  const isDetailPage = pathname.startsWith('/dramas/mining-weekly-rewards/') && pathname !== '/dramas/mining-weekly-rewards';
+  
+  if (isDetailPage) {
+    return [
+      { title: <><HomeOutlined /> Home</> },
+      { title: 'Dramas' },
+      { title: <a onClick={() => navigateFn('/dramas/mining-weekly-rewards')}>Mining Weekly Rewards</a> },
+      { title: 'Detail' },
+    ];
+  }
+  
+  const pageName = breadcrumbMap[pathname] || '';
+  if (pageName) {
+    return [
+      { title: <><HomeOutlined /> Home</> },
+      { title: 'Dramas' },
+      { title: pageName },
+    ];
+  }
+  
+  return [];
 };
 
 const AppLayout: React.FC = () => {
@@ -60,16 +86,7 @@ const AppLayout: React.FC = () => {
     }
   }, [location.pathname]);
 
-  const breadcrumbItems = [
-    { title: <><HomeOutlined /> Home</> },
-    ...(isUsersPage ? [
-      { title: 'Users' },
-      { title: 'Users' },
-    ] : pageName ? [
-      { title: 'Dramas' },
-      { title: pageName },
-    ] : []),
-  ];
+  const breadcrumbItems = getBreadcrumbItems(location.pathname, navigate);
 
   const userMenuItems = [
     { key: 'profile', label: 'Profile' },
