@@ -1,8 +1,9 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import {
   Table,
   Button,
   Tag,
+  Input,
   InputNumber,
   Modal,
   message,
@@ -13,6 +14,7 @@ import {
   ArrowLeftOutlined,
   SaveOutlined,
   CheckOutlined,
+  SearchOutlined,
   EyeOutlined,
 } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
@@ -54,7 +56,6 @@ interface MiningPeriod {
   approvedTime: string;
 }
 
-// 与列表页 MiningWeeklyRewardsList.tsx 的 mockPeriods 保持一致
 const mockPeriods: MiningPeriod[] = [
   { id: '1', week: 22, range: '06/09 ~ 06/15', users: 128, amount: 1852300, status: 'pending', autoRelease: '06/18 15:00', approvedTime: '' },
   { id: '2', week: 21, range: '06/02 ~ 06/08', users: 156, amount: 2102900, status: 'approved', autoRelease: '06/11 15:00', approvedTime: '06/10 14:32' },
@@ -80,192 +81,27 @@ const mockPeriods: MiningPeriod[] = [
   { id: '22', week: 1,  range: '01/13 ~ 01/19', users: 136, amount: 2034700, status: 'approved', autoRelease: '01/22 15:00', approvedTime: '01/21 13:42' },
 ];
 
-// 质押挖矿产出远大于邀请挖矿，且没有0值
 const mockDetails: MiningRewardDetail[] = [
-  {
-    id: '1',
-    periodId: 'WP-2026-28',
-    userId: '427669209656590336',
-    rewardType: 'Earnings',
-    system: 'Dispatch',
-    actualOutput: 12580.5,
-    originalOutput: 12580.5,
-    fromUserId: '',
-    auditStatus: 'Audited',
-    auditor: 'SYSTEM',
-    auditRemark: 'batchApprove',
-    auditedAt: '2026-07-14 14:53:55',
-    createdAt: '2026-07-13 18:00:00',
-  },
-  {
-    id: '2',
-    periodId: 'WP-2026-28',
-    userId: '427669209656590336',
-    rewardType: 'Earnings',
-    system: 'Dispatch',
-    actualOutput: 8320.25,
-    originalOutput: 8320.25,
-    fromUserId: '',
-    auditStatus: 'Audited',
-    auditor: 'SYSTEM',
-    auditRemark: 'batchApprove',
-    auditedAt: '2026-07-14 14:54:22',
-    createdAt: '2026-07-13 18:00:00',
-  },
-  {
-    id: '3',
-    periodId: 'WP-2026-28',
-    userId: '427669209656590336',
-    rewardType: 'Earnings',
-    system: 'Dispatch',
-    actualOutput: 15630.75,
-    originalOutput: 15630.75,
-    fromUserId: '',
-    auditStatus: 'Audited',
-    auditor: 'SYSTEM',
-    auditRemark: 'batchApprove',
-    auditedAt: '2026-07-14 14:55:25',
-    createdAt: '2026-07-13 18:00:00',
-  },
-  {
-    id: '4',
-    periodId: 'WP-2026-28',
-    userId: '427669209656590336',
-    rewardType: 'Invite Earnings',
-    system: '-',
-    actualOutput: 380.5,
-    originalOutput: 380.5,
-    fromUserId: '430200786077212672',
-    auditStatus: 'Audited',
-    auditor: 'SYSTEM',
-    auditRemark: '1',
-    auditedAt: '2026-07-14 13:48:53',
-    createdAt: '2026-07-13 08:00:00',
-  },
-  {
-    id: '5',
-    periodId: 'WP-2026-28',
-    userId: '427669209656590336',
-    rewardType: 'Earnings',
-    system: 'Dispatch',
-    actualOutput: 21450.0,
-    originalOutput: 21450.0,
-    fromUserId: '',
-    auditStatus: 'Audited',
-    auditor: 'SYSTEM',
-    auditRemark: 'batchApprove',
-    auditedAt: '2026-07-14 13:50:26',
-    createdAt: '2026-07-13 08:00:00',
-  },
-  {
-    id: '6',
-    periodId: 'WP-2026-28',
-    userId: '427669209656590336',
-    rewardType: 'Earnings',
-    system: 'Dispatch',
-    actualOutput: 9870.3,
-    originalOutput: 9870.3,
-    fromUserId: '',
-    auditStatus: 'Audited',
-    auditor: 'SYSTEM',
-    auditRemark: 'batchApprove',
-    auditedAt: '2026-07-14 13:51:06',
-    createdAt: '2026-07-13 08:00:00',
-  },
-  {
-    id: '7',
-    periodId: 'WP-2026-28',
-    userId: '427624421473386496',
-    rewardType: 'Earnings',
-    system: 'Dispatch',
-    actualOutput: 18560.0,
-    originalOutput: 18560.0,
-    fromUserId: '',
-    auditStatus: 'Audited',
-    auditor: 'SYSTEM',
-    auditRemark: 'batchReject',
-    auditedAt: '2026-07-14 10:35:09',
-    createdAt: '2026-07-13 08:00:00',
-  },
+  { id: '1', periodId: 'WP-2026-28', userId: '427669209656590336', rewardType: 'Earnings', system: 'Dispatch', actualOutput: 12580.5, originalOutput: 12580.5, fromUserId: '', auditStatus: 'Audited', auditor: 'SYSTEM', auditRemark: 'batchApprove', auditedAt: '2026-07-14 14:53:55', createdAt: '2026-07-13 18:00:00' },
+  { id: '2', periodId: 'WP-2026-28', userId: '427669209656590336', rewardType: 'Earnings', system: 'Dispatch', actualOutput: 8320.25, originalOutput: 8320.25, fromUserId: '', auditStatus: 'Audited', auditor: 'SYSTEM', auditRemark: 'batchApprove', auditedAt: '2026-07-14 14:54:22', createdAt: '2026-07-13 18:00:00' },
+  { id: '3', periodId: 'WP-2026-28', userId: '427669209656590336', rewardType: 'Earnings', system: 'Dispatch', actualOutput: 15630.75, originalOutput: 15630.75, fromUserId: '', auditStatus: 'Audited', auditor: 'SYSTEM', auditRemark: 'batchApprove', auditedAt: '2026-07-14 14:55:25', createdAt: '2026-07-13 18:00:00' },
+  { id: '4', periodId: 'WP-2026-28', userId: '427669209656590336', rewardType: 'Invite Earnings', system: '-', actualOutput: 380.5, originalOutput: 380.5, fromUserId: '430200786077212672', auditStatus: 'Audited', auditor: 'SYSTEM', auditRemark: '1', auditedAt: '2026-07-14 13:48:53', createdAt: '2026-07-13 08:00:00' },
+  { id: '5', periodId: 'WP-2026-28', userId: '427669209656590336', rewardType: 'Earnings', system: 'Dispatch', actualOutput: 21450.0, originalOutput: 21450.0, fromUserId: '', auditStatus: 'Audited', auditor: 'SYSTEM', auditRemark: 'batchApprove', auditedAt: '2026-07-14 13:50:26', createdAt: '2026-07-13 08:00:00' },
+  { id: '6', periodId: 'WP-2026-28', userId: '427669209656590336', rewardType: 'Earnings', system: 'Dispatch', actualOutput: 9870.3, originalOutput: 9870.3, fromUserId: '', auditStatus: 'Audited', auditor: 'SYSTEM', auditRemark: 'batchApprove', auditedAt: '2026-07-14 13:51:06', createdAt: '2026-07-13 08:00:00' },
+  { id: '7', periodId: 'WP-2026-28', userId: '427624421473386496', rewardType: 'Earnings', system: 'Dispatch', actualOutput: 18560.0, originalOutput: 18560.0, fromUserId: '', auditStatus: 'Audited', auditor: 'SYSTEM', auditRemark: 'batchReject', auditedAt: '2026-07-14 10:35:09', createdAt: '2026-07-13 08:00:00' },
 ];
 
 const mockChangeLogs: ChangeLog[] = [
-  {
-    id: '1',
-    modifiedAt: '2026-07-14 14:53:55',
-    operator: 'admin',
-    oldValue: 12580.5,
-    newValue: 12000.0,
-    remark: '手动调整',
-  },
-  {
-    id: '2',
-    modifiedAt: '2026-07-14 14:54:22',
-    operator: 'admin',
-    oldValue: 8320.25,
-    newValue: 8000.0,
-    remark: '手动调整',
-  },
+  { id: '1', modifiedAt: '2026-07-14 14:53:55', operator: 'admin', oldValue: 12580.5, newValue: 12000.0, remark: '手动调整' },
+  { id: '2', modifiedAt: '2026-07-14 14:54:22', operator: 'admin', oldValue: 8320.25, newValue: 8000.0, remark: '手动调整' },
 ];
 
-// 从列表页复制的数字格式化函数
 function fmtAmount(n: number): string {
   if (n >= 1000000000) return (n / 1000000000).toFixed(2) + 'B';
   if (n >= 1000000) return (n / 1000000).toFixed(1) + 'M';
   if (n >= 1000) return (n / 1000).toFixed(1) + 'k';
   return n.toLocaleString();
 }
-
-const EditableActualOutput: React.FC<{
-  value: number;
-  record: MiningRewardDetail;
-  isReadOnly: boolean;
-  onChange: (detailId: string, newValue: number) => void;
-}> = ({ value, record, isReadOnly, onChange }) => {
-  const [inputValue, setInputValue] = useState(value);
-  const [isInvalid, setIsInvalid] = useState(false);
-
-  useEffect(() => {
-    setInputValue(value);
-  }, [value]);
-
-  const handleChange = (newValue: number | null) => {
-    if (newValue === null || newValue === undefined) {
-      setInputValue(0);
-      return;
-    }
-
-    if (newValue > record.originalOutput) {
-      setIsInvalid(true);
-      message.error('不能大于当前值');
-      return;
-    }
-
-    setIsInvalid(false);
-    setInputValue(newValue);
-    onChange(record.id, newValue);
-  };
-
-  // 仅当"未放行"且奖励类型为"质押挖矿"时才可编辑，且值不能大于原值
-  const canEdit = !isReadOnly && record.rewardType === 'Earnings';
-
-  if (!canEdit) {
-    return <span>{value.toFixed(4)}</span>;
-  }
-
-  return (
-    <InputNumber
-      value={inputValue}
-      onChange={handleChange}
-      min={0}
-      max={record.originalOutput}
-      step={0.0001}
-      precision={4}
-      style={{ width: 150, borderColor: isInvalid ? '#ff4d4f' : undefined }}
-      status={isInvalid ? 'error' : undefined}
-    />
-  );
-};
 
 const REWARD_TYPE_LABEL: Record<string, string> = {
   Earnings: '质押挖矿',
@@ -290,22 +126,32 @@ const MiningWeeklyRewardsDetail: React.FC = () => {
   const { periodId } = useParams<{ periodId: string }>();
   const navigate = useNavigate();
 
-  // 根据路由参数 periodId (week 数字) 查找对应的周期数据
   const periodFromList = useMemo(() => {
     const weekNum = parseInt(periodId || '0', 10);
     return mockPeriods.find((p) => p.week === weekNum) || null;
   }, [periodId]);
 
-  // 映射为详情页使用的状态：列表页 pending=未放行(Pending), approved=已放行(Released)
   const periodStatus = periodFromList?.status === 'approved' ? 'Released' : 'Pending';
   const isReleased = periodStatus === 'Released';
   const periodRange = periodFromList?.range || `Week ${periodId}`;
 
-  const [details, setDetails] = useState<MiningRewardDetail[]>(() => mockDetails.map((d) => ({ ...d })));
+  const [details, setDetails] = useState<MiningRewardDetail[]>(() =>
+    [...mockDetails].sort((a, b) => b.actualOutput - a.actualOutput)
+  );
   const [changeLogs, setChangeLogs] = useState<ChangeLog[]>(mockChangeLogs);
   const [logDrawerVisible, setLogDrawerVisible] = useState(false);
   const [selectedDetailId, setSelectedDetailId] = useState<string | null>(null);
   const [releaseModalVisible, setReleaseModalVisible] = useState(false);
+  const [userIdFilter, setUserIdFilter] = useState('');
+
+  const filteredDetails = useMemo(() => {
+    let result = [...details];
+    if (userIdFilter) {
+      result = result.filter((d) => d.userId.includes(userIdFilter));
+    }
+    result.sort((a, b) => b.actualOutput - a.actualOutput);
+    return result;
+  }, [details, userIdFilter]);
 
   const handleActualOutputChange = useCallback((detailId: string, newValue: number) => {
     if (isReleased) return;
@@ -327,20 +173,16 @@ const MiningWeeklyRewardsDetail: React.FC = () => {
 
   const handleViewLog = (detailId: string) => {
     setSelectedDetailId(detailId);
-    const logs = changeLogs.filter((log) => log.id === detailId);
-    setChangeLogs(logs);
     setLogDrawerVisible(true);
   };
 
   const handleSave = () => {
-    // Validate all changes
     const hasInvalid = details.some((d) => d.actualOutput > d.originalOutput);
     if (hasInvalid) {
       message.error('部分数值无效，请检查后重试');
       return;
     }
 
-    // 只记录实际有修改的记录（原值≠新值）
     const newLogs: ChangeLog[] = details
       .filter((d) => d.actualOutput !== d.originalOutput)
       .map((d) => ({
@@ -367,7 +209,6 @@ const MiningWeeklyRewardsDetail: React.FC = () => {
 
   const confirmRelease = () => {
     const now = new Date().toISOString().replace('T', ' ').slice(0, 19);
-    // 放行时更新所有明细的放行人和放行时间
     setDetails((prev) =>
       prev.map((d) => ({
         ...d,
@@ -409,23 +250,37 @@ const MiningWeeklyRewardsDetail: React.FC = () => {
       ),
     },
     {
-      title: '审批人',
-      dataIndex: 'system',
-      key: 'system',
-      render: (system: string) => system || '-',
-    },
-    {
       title: '实际产出',
       dataIndex: 'actualOutput',
       key: 'actualOutput',
-      render: (value: number, record: MiningRewardDetail) => (
-        <EditableActualOutput
-          value={value}
-          record={record}
-          isReadOnly={isReleased}
-          onChange={handleActualOutputChange}
-        />
-      ),
+      defaultSortOrder: 'descend',
+      sorter: (a, b) => a.actualOutput - b.actualOutput,
+      render: (value: number, record: MiningRewardDetail) => {
+        // 未放行 + 质押挖矿 → 可编辑
+        const canEdit = !isReleased && record.rewardType === 'Earnings';
+        if (canEdit) {
+          return (
+            <InputNumber
+              value={value}
+              onChange={(v) => {
+                if (v !== null && v !== undefined) {
+                  handleActualOutputChange(record.id, v);
+                }
+              }}
+              min={0}
+              max={record.originalOutput}
+              step={0.0001}
+              precision={4}
+              style={{ width: 150 }}
+            />
+          );
+        }
+        return (
+          <span style={{ fontWeight: 600, color: '#00b388' }}>
+            {value.toFixed(4)}
+          </span>
+        );
+      },
     },
     {
       title: '来源用户ID',
@@ -499,9 +354,13 @@ const MiningWeeklyRewardsDetail: React.FC = () => {
     Rejected: '已驳回',
   };
 
+  const drawerLogs = useMemo(() => {
+    if (!selectedDetailId) return [];
+    return changeLogs.filter((log) => log.id === selectedDetailId);
+  }, [changeLogs, selectedDetailId]);
+
   return (
     <div>
-      {/* Header */}
       <div style={{ marginBottom: 24, display: 'flex', alignItems: 'center', gap: 12 }}>
         <Button
           icon={<ArrowLeftOutlined />}
@@ -522,7 +381,6 @@ const MiningWeeklyRewardsDetail: React.FC = () => {
         </h2>
       </div>
 
-      {/* Period Summary Card - 与列表页内容一致 */}
       <div
         style={{
           background: '#fff',
@@ -549,7 +407,9 @@ const MiningWeeklyRewardsDetail: React.FC = () => {
             <span style={{ fontWeight: 600 }}>{periodFromList?.users || 0}</span>
           </Descriptions.Item>
           <Descriptions.Item label="实际产出 (STORY)">
-            <span style={{ fontWeight: 600, color: '#00b388' }}>{fmtAmount(periodFromList?.amount || 0)}</span>
+            <span style={{ fontWeight: 600, color: '#00b388' }}>
+              {periodFromList?.amount ? fmtAmount(periodFromList.amount) : '0'}
+            </span>
           </Descriptions.Item>
           <Descriptions.Item label="状态">
             <Tag
@@ -574,43 +434,59 @@ const MiningWeeklyRewardsDetail: React.FC = () => {
         </Descriptions>
       </div>
 
-      {/* Action Buttons - 已放行周期不显示操作按钮 */}
-      {!isReleased && (
-        <div style={{ marginBottom: 16, display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
-          <Button
-            type="primary"
-            icon={<SaveOutlined />}
-            onClick={handleSave}
-            style={{
-              borderRadius: 999,
-              fontWeight: 600,
-              fontSize: '0.82rem',
-              padding: '4px 20px',
-              height: 36,
-            }}
-          >
-            保存
-          </Button>
-          <Button
-            type="primary"
-            icon={<CheckOutlined />}
-            onClick={handleRelease}
-            style={{
-              borderRadius: 999,
-              fontWeight: 600,
-              fontSize: '0.82rem',
-              padding: '4px 20px',
-              height: 36,
-              background: '#00b388',
-              borderColor: '#00b388',
-            }}
-          >
-            放行
-          </Button>
-        </div>
-      )}
+      {/* 筛选框 + 操作按钮同行 */}
+      <div
+        style={{
+          marginBottom: 16,
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+        }}
+      >
+        <Input
+          placeholder="用户ID"
+          value={userIdFilter}
+          onChange={(e) => setUserIdFilter(e.target.value)}
+          allowClear
+          prefix={<SearchOutlined style={{ color: '#8b8d98' }} />}
+          style={{ width: 260, borderRadius: 999 }}
+        />
+        {!isReleased && (
+          <div style={{ display: 'flex', gap: 10 }}>
+            <Button
+              type="primary"
+              icon={<SaveOutlined />}
+              onClick={handleSave}
+              style={{
+                borderRadius: 999,
+                fontWeight: 600,
+                fontSize: '0.82rem',
+                padding: '4px 20px',
+                height: 36,
+              }}
+            >
+              保存
+            </Button>
+            <Button
+              type="primary"
+              icon={<CheckOutlined />}
+              onClick={handleRelease}
+              style={{
+                borderRadius: 999,
+                fontWeight: 600,
+                fontSize: '0.82rem',
+                padding: '4px 20px',
+                height: 36,
+                background: '#00b388',
+                borderColor: '#00b388',
+              }}
+            >
+              放行
+            </Button>
+          </div>
+        )}
+      </div>
 
-      {/* Detail Table */}
       <div
         style={{
           background: '#fff',
@@ -622,7 +498,7 @@ const MiningWeeklyRewardsDetail: React.FC = () => {
       >
         <Table<MiningRewardDetail>
           columns={columns}
-          dataSource={details}
+          dataSource={filteredDetails}
           rowKey="id"
           bordered={false}
           pagination={false}
@@ -633,7 +509,6 @@ const MiningWeeklyRewardsDetail: React.FC = () => {
         />
       </div>
 
-      {/* Change Log Drawer */}
       <Drawer
         title={
           <span style={{ fontSize: '1.05rem', fontWeight: 600, letterSpacing: '-0.01em', color: '#13202e' }}>
@@ -665,35 +540,13 @@ const MiningWeeklyRewardsDetail: React.FC = () => {
         >
           <Table<ChangeLog>
             columns={[
-              {
-                title: '修改时间',
-                dataIndex: 'modifiedAt',
-                key: 'modifiedAt',
-              },
-              {
-                title: '操作人',
-                dataIndex: 'operator',
-                key: 'operator',
-              },
-              {
-                title: '旧值',
-                dataIndex: 'oldValue',
-                key: 'oldValue',
-                render: (value: number) => value.toFixed(4),
-              },
-              {
-                title: '新值',
-                dataIndex: 'newValue',
-                key: 'newValue',
-                render: (value: number) => value.toFixed(4),
-              },
-              {
-                title: '备注',
-                dataIndex: 'remark',
-                key: 'remark',
-              },
+              { title: '修改时间', dataIndex: 'modifiedAt', key: 'modifiedAt' },
+              { title: '操作人', dataIndex: 'operator', key: 'operator' },
+              { title: '旧值', dataIndex: 'oldValue', key: 'oldValue', render: (v: number) => v.toFixed(4) },
+              { title: '新值', dataIndex: 'newValue', key: 'newValue', render: (v: number) => v.toFixed(4) },
+              { title: '备注', dataIndex: 'remark', key: 'remark' },
             ]}
-            dataSource={changeLogs}
+            dataSource={drawerLogs}
             rowKey="id"
             bordered={false}
             pagination={false}
@@ -702,7 +555,6 @@ const MiningWeeklyRewardsDetail: React.FC = () => {
         </div>
       </Drawer>
 
-      {/* Release Confirm Modal */}
       <Modal
         title={null}
         open={releaseModalVisible}
@@ -725,18 +577,9 @@ const MiningWeeklyRewardsDetail: React.FC = () => {
           <button
             onClick={() => setReleaseModalVisible(false)}
             style={{
-              width: 32,
-              height: 32,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              border: 'none',
-              background: 'rgba(0,0,0,0.04)',
-              borderRadius: '50%',
-              cursor: 'pointer',
-              fontSize: '1.2rem',
-              color: '#5e6f83',
-              transition: 'background 0.15s',
+              width: 32, height: 32, display: 'flex', alignItems: 'center', justifyContent: 'center',
+              border: 'none', background: 'rgba(0,0,0,0.04)', borderRadius: '50%',
+              cursor: 'pointer', fontSize: '1.2rem', color: '#5e6f83', transition: 'background 0.15s',
             }}
           >
             ✕
@@ -751,38 +594,8 @@ const MiningWeeklyRewardsDetail: React.FC = () => {
           </p>
         </div>
         <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
-          <button
-            onClick={() => setReleaseModalVisible(false)}
-            style={{
-              padding: '10px 24px',
-              borderRadius: 999,
-              border: '1px solid #deeaf7',
-              background: '#fff',
-              color: '#5e6f83',
-              fontSize: '0.88rem',
-              fontWeight: 500,
-              cursor: 'pointer',
-              transition: 'all 0.15s',
-            }}
-          >
-            取消
-          </button>
-          <button
-            onClick={confirmRelease}
-            style={{
-              padding: '10px 24px',
-              borderRadius: 999,
-              border: 'none',
-              background: '#00b388',
-              color: '#fff',
-              fontSize: '0.88rem',
-              fontWeight: 600,
-              cursor: 'pointer',
-              transition: 'all 0.2s',
-            }}
-          >
-            确认放行
-          </button>
+          <button onClick={() => setReleaseModalVisible(false)} style={{ padding: '10px 24px', borderRadius: 999, border: '1px solid #deeaf7', background: '#fff', color: '#5e6f83', fontSize: '0.88rem', fontWeight: 500, cursor: 'pointer', transition: 'all 0.15s' }}>取消</button>
+          <button onClick={confirmRelease} style={{ padding: '10px 24px', borderRadius: 999, border: 'none', background: '#00b388', color: '#fff', fontSize: '0.88rem', fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s' }}>确认放行</button>
         </div>
       </Modal>
     </div>
