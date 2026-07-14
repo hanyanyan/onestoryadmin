@@ -15,6 +15,7 @@ import {
   SaveOutlined,
   CheckOutlined,
   SearchOutlined,
+  ReloadOutlined,
   EyeOutlined,
 } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
@@ -143,6 +144,16 @@ const MiningWeeklyRewardsDetail: React.FC = () => {
   const [selectedDetailId, setSelectedDetailId] = useState<string | null>(null);
   const [releaseModalVisible, setReleaseModalVisible] = useState(false);
   const [userIdFilter, setUserIdFilter] = useState('');
+  const [searchValue, setSearchValue] = useState('');
+
+  const handleSearch = () => {
+    setUserIdFilter(searchValue);
+  };
+
+  const handleClearFilter = () => {
+    setSearchValue('');
+    setUserIdFilter('');
+  };
 
   const filteredDetails = useMemo(() => {
     let result = [...details];
@@ -306,6 +317,7 @@ const MiningWeeklyRewardsDetail: React.FC = () => {
     {
       title: '放行人',
       key: 'releaser',
+      width: 120,
       render: (_: unknown, record: MiningRewardDetail) => {
         if (isPeriodPending) return <span style={{ color: '#8b8d98' }}>--</span>;
         return <span>{record.auditor || '--'}</span>;
@@ -314,6 +326,7 @@ const MiningWeeklyRewardsDetail: React.FC = () => {
     {
       title: '放行时间',
       key: 'releaseTime',
+      width: 170,
       render: (_: unknown, record: MiningRewardDetail) => {
         if (isPeriodPending) return <span style={{ color: '#8b8d98' }}>--</span>;
         return <span>{record.auditedAt || '--'}</span>;
@@ -443,14 +456,45 @@ const MiningWeeklyRewardsDetail: React.FC = () => {
           alignItems: 'center',
         }}
       >
-        <Input
-          placeholder="用户ID"
-          value={userIdFilter}
-          onChange={(e) => setUserIdFilter(e.target.value)}
-          allowClear
-          prefix={<SearchOutlined style={{ color: '#8b8d98' }} />}
-          style={{ width: 260, borderRadius: 999 }}
-        />
+        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+          <Input
+            placeholder="用户ID"
+            value={searchValue}
+            onChange={(e) => setSearchValue(e.target.value)}
+            allowClear
+            prefix={<SearchOutlined style={{ color: '#8b8d98' }} />}
+            style={{ width: 260, borderRadius: 999 }}
+            onPressEnter={handleSearch}
+          />
+          <Button
+            type="primary"
+            icon={<SearchOutlined />}
+            onClick={handleSearch}
+            style={{
+              borderRadius: 999,
+              fontWeight: 500,
+              fontSize: '0.82rem',
+              padding: '4px 16px',
+              height: 36,
+            }}
+          >
+            搜索
+          </Button>
+          <Button
+            icon={<ReloadOutlined />}
+            onClick={handleClearFilter}
+            style={{
+              borderRadius: 999,
+              border: '1px solid #deeaf7',
+              fontWeight: 500,
+              fontSize: '0.82rem',
+              padding: '4px 16px',
+              height: 36,
+            }}
+          >
+            清空
+          </Button>
+        </div>
         {!isReleased && (
           <div style={{ display: 'flex', gap: 10 }}>
             <Button
@@ -497,7 +541,19 @@ const MiningWeeklyRewardsDetail: React.FC = () => {
         }}
       >
         <Table<MiningRewardDetail>
-          columns={columns}
+          columns={columns.map((col) => ({
+            ...col,
+            onHeaderCell: () => ({
+              style: {
+                background: '#f8fbfe',
+                color: '#5e6f83',
+                fontWeight: 600,
+                fontSize: '0.78rem',
+                padding: '6px 10px',
+                borderBottom: '1px solid #deeaf7',
+              },
+            }),
+          }))}
           dataSource={filteredDetails}
           rowKey="id"
           bordered={false}
